@@ -1,0 +1,10 @@
+python-chess
+matplotlib
+seaborn
+stockfish
+cairosvg
+numpy
+imageio
+imageio-ffmpeg
+Pillow
+polyglot

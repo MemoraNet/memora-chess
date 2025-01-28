@@ -1,0 +1,52 @@
+{
+  "metadata": {
+    "source": "TestBook",
+    "type": "basic_openings",
+    "created_at": 1738067698.440821,
+    "ram_required": "50MB",
+    "version": "1.0",
+    "total_positions": 5,
+    "average_weight": 900.0,
+    "sequences": {
+      "Ruy Lopez": 0,
+      "Italian Game": 5
+    }
+  },
+  "memory_data": {
+    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1": {
+      "move": "e2e4",
+      "weight": 900,
+      "sequence": "Italian Game",
+      "position": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "timestamp": 1738067698.4406478
+    },
+    "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1": {
+      "move": "e7e5",
+      "weight": 900,
+      "sequence": "Italian Game",
+      "position": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1",
+      "timestamp": 1738067698.440693
+    },
+    "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2": {
+      "move": "g1f3",
+      "weight": 900,
+      "sequence": "Italian Game",
+      "position": "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
+      "timestamp": 1738067698.4407349
+    },
+    "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2": {
+      "move": "b8c6",
+      "weight": 900,
+      "sequence": "Italian Game",
+      "position": "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2",
+      "timestamp": 1738067698.440771
+    },
+    "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3": {
+      "move": "f1c4",
+      "weight": 900,
+      "sequence": "Italian Game",
+      "position": "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
+      "timestamp": 1738067698.4408069
+    }
+  }
+}
