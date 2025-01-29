@@ -2,51 +2,86 @@
   "metadata": {
     "source": "TestBook",
     "type": "basic_openings",
-    "created_at": 1738067698.440821,
+    "created_at": 1738088422.607636,
     "ram_required": "50MB",
     "version": "1.0",
     "total_positions": 5,
-    "average_weight": 900.0,
+    "average_weight": 950.0,
     "sequences": {
-      "Ruy Lopez": 0,
+      "Ruy Lopez": 5,
       "Italian Game": 5
     }
   },
   "memory_data": {
-    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1": {
+    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1_Ruy Lopez": {
+      "move": "e2e4",
+      "weight": 1000,
+      "sequence": "Ruy Lopez",
+      "position": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "timestamp": 1738088422.6071832
+    },
+    "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1_Ruy Lopez": {
+      "move": "e7e5",
+      "weight": 1000,
+      "sequence": "Ruy Lopez",
+      "position": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1",
+      "timestamp": 1738088422.6072562
+    },
+    "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2_Ruy Lopez": {
+      "move": "g1f3",
+      "weight": 1000,
+      "sequence": "Ruy Lopez",
+      "position": "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
+      "timestamp": 1738088422.607316
+    },
+    "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2_Ruy Lopez": {
+      "move": "b8c6",
+      "weight": 1000,
+      "sequence": "Ruy Lopez",
+      "position": "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2",
+      "timestamp": 1738088422.607362
+    },
+    "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3_Ruy Lopez": {
+      "move": "f1b5",
+      "weight": 1000,
+      "sequence": "Ruy Lopez",
+      "position": "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
+      "timestamp": 1738088422.607404
+    },
+    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1_Italian Game": {
       "move": "e2e4",
       "weight": 900,
       "sequence": "Italian Game",
       "position": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-      "timestamp": 1738067698.4406478
+      "timestamp": 1738088422.607456
     },
-    "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1": {
+    "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1_Italian Game": {
       "move": "e7e5",
       "weight": 900,
       "sequence": "Italian Game",
       "position": "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1",
-      "timestamp": 1738067698.440693
+      "timestamp": 1738088422.607501
     },
-    "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2": {
+    "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2_Italian Game": {
       "move": "g1f3",
       "weight": 900,
       "sequence": "Italian Game",
       "position": "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
-      "timestamp": 1738067698.4407349
+      "timestamp": 1738088422.607544
     },
-    "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2": {
+    "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2_Italian Game": {
       "move": "b8c6",
       "weight": 900,
       "sequence": "Italian Game",
       "position": "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2",
-      "timestamp": 1738067698.440771
+      "timestamp": 1738088422.6075819
     },
-    "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3": {
+    "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3_Italian Game": {
       "move": "f1c4",
       "weight": 900,
       "sequence": "Italian Game",
       "position": "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
-      "timestamp": 1738067698.4408069
+      "timestamp": 1738088422.60762
     }
   }
 }

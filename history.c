@@ -85,5 +85,5 @@ def test_sequence_learning():
         student_move = student.get_move_from_memory(pos)
         print(f"Pozisyon için öğrenilen hamle doğru mu: {student_move == expected_move}")
 
-        source venv/bin/activate
+source venv/bin/activate
 */

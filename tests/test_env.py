@@ -12,6 +12,7 @@ from src.visualizer import ChessVisualizer, LearningVisualizer
 
 def test_basic_functionality():
     """Temel satranç ortamı fonksiyonlarını test et"""
+    print("\nStockfish Test:")
     env = ChessEnvironment()
     
     # Başlangıç durumunu al
@@ -36,7 +37,7 @@ def test_teaching_process():
     """Öğretme ve öğrenme sürecini test et"""
     print("\n=== Teaching Process Test ===")
     env = ChessEnvironment()
-
+    
     # Görselleştiricileri oluştur
     chess_vis = ChessVisualizer()
     learning_vis = LearningVisualizer()
@@ -47,7 +48,7 @@ def test_teaching_process():
     positions = []
     moves = []
     descriptions = []
-
+    
     for move_number in range(5):
         current_position = env.get_board_state()
         positions.append(current_position)
@@ -55,34 +56,32 @@ def test_teaching_process():
         print(f"\nHamle {move_number + 1}:")
         move = teacher.teach(student, current_position)
         moves.append(move)
-        env.make_move(move)
-
-        # Her hamleden sonra pozisyonu görselleştir
+        descriptions.append(f"Move {move_number + 1}: {move}")
+        
+        # Her hamleyi görselleştir
         chess_vis.save_position(current_position, move, f"move_{move_number+1}.svg")
         
         # Hamleyi yap
         env.make_move(move)
         
-        # Her hamleden sonra detaylı istatistikleri göster
+        # İstatistikleri göster
         print("\nÖğretmen Detaylı İstatistikler:")
         print(teacher.get_teaching_stats())
         
         print("\nÖğrenci Detaylı İstatistikler:")
         print(student.get_learning_stats())
-
-        # Öğrenme ilerlemesini görselleştir
+        
         learning_vis.plot_learning_progress(student)
-        learning_vis.plot_detailed_metrics(student)
- 
+    
     # Oyun animasyonunu oluştur
     chess_vis.create_learning_animation(positions, moves, descriptions)
-
+    
     print("\nGörselleştirmeler oluşturuldu:")
     print("- Satranç hamleleri: chess_visuals/")
     print("- Öğrenme grafikleri: learning_visuals/")
     print("- Animasyon: chess_visuals/game_animation.gif")
-
-    # Final test - öğrenilen hamleleri kontrol et
+    
+    # Final test
     print("\nFinal Hamle Testleri:")
     success_count = 0
     for pos, expected_move in zip(positions, moves):
@@ -93,6 +92,33 @@ def test_teaching_process():
     
     print(f"\nToplam Başarı Oranı: {(success_count/len(positions))*100}%")
 
+def test_memory_usage():
+    """Hafıza kullanımını test et"""
+    print("\n=== Hafıza Kullanım Testi ===")
+    
+    # Öğrenci agent oluştur
+    student = StudentAgent("Memory Student")
+    
+    # Hafıza paketini yükle
+    success = student.load_memory_package("test_memory_package.agentmem")
+    if not success:
+        print("Hafıza paketi yüklenemedi!")
+        return
+        
+    # Test pozisyonları
+    test_positions = [
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",  # Başlangıç
+        "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",  # e4 e5
+        "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3"  # ...Nc6
+    ]
+    
+    print("\nTest Hamleleri:")
+    for pos in test_positions:
+        move = student.get_move(pos)
+        print(f"Pozisyon: {pos[:30]}...")
+        print(f"Seçilen hamle: {move}")
+        print("---")
+
 def main():
     """Tüm testleri çalıştır"""
     try:
@@ -101,6 +127,9 @@ def main():
         
         # Öğretme/öğrenme süreci testi
         test_teaching_process()
+        
+        # Hafıza kullanım testi
+        test_memory_usage()
         
     except Exception as e:
         print(f"Test sırasında hata oluştu: {e}")

@@ -1,16 +1,14 @@
-# src/chess_agents.py (yeni dosya adı)
-
 import time
+import json
 from abc import ABC, abstractmethod
 
 class BaseAgent(ABC):
-    """Temel Agent sınıfı"""
     def __init__(self, name):
         self.name = name
         self.position_memory = {}
         self.game_sequences = []
-        self.move_history = []  # Hamle geçmişi
-
+        self.move_history = []
+        
     def get_move_from_memory(self, position):
         return self.position_memory.get(position)
     
@@ -23,31 +21,27 @@ class BaseAgent(ABC):
         }
 
 class TeacherAgent(BaseAgent):
-    """Öğretmen Agent - Stockfish tabanlı"""
     def __init__(self, name, engine):
         super().__init__(name)
-        self.engine = engine  # Stockfish engine
-        self.teaching_history = []  # Öğretme geçmişi
+        self.engine = engine
+        self.teaching_history = []
         
     def calculate_best_move(self, position):
-        """Stockfish kullanarak en iyi hamleyi hesapla"""
         return self.engine.get_best_move()
     
     def record_move(self, position, move):
-        """Hamleyi kaydet"""
         self.position_memory[position] = move
         self.move_history.append({
             'position': position,
             'move': move,
             'timestamp': time.time()
         })
-
+        
     def teach(self, student, position):
-        """Öğrenciye hamle öğret"""
         move = self.calculate_best_move(position)
         self.record_move(position, move)
         student.learn(position, move)
-
+        
         self.teaching_history.append({
             'student': student.name,
             'position': position,
@@ -63,16 +57,15 @@ class TeacherAgent(BaseAgent):
             'total_lessons': len(self.teaching_history),
             'last_teaching': self.teaching_history[-1] if self.teaching_history else None
         }
-    
+
 class StudentAgent(BaseAgent):
-    """Öğrenci Agent"""
     def __init__(self, name):
         super().__init__(name)
         self.learned_moves = 0
-        self.learning_history = []  # Öğrenme geçmişi
+        self.learning_history = []
+        self.opening_knowledge = {}  # Açılış bilgisi için
         
     def learn(self, position, move):
-        """Öğretmenden hamle öğren"""
         self.position_memory[position] = move
         self.learned_moves += 1
         
@@ -84,7 +77,48 @@ class StudentAgent(BaseAgent):
         }
         self.learning_history.append(learning_event)
         self.move_history.append(learning_event)
-
+        
+    # 🟢 YENİ METOD
+    def load_memory_package(self, package):
+        """Hafıza paketini yükle"""
+        if isinstance(package, dict):
+            # Direkt dictionary olarak geldi
+            memory_data = package['memory_data']
+        else:
+            # Dosyadan okuma
+            try:
+                with open(package, 'r') as f:
+                    data = json.load(f)
+                    memory_data = data['memory_data']
+            except Exception as e:
+                print(f"Hafıza paketi yüklenirken hata: {e}")
+                return False
+        
+        # Hafızayı işle
+        for key, data in memory_data.items():
+            position = data['position']
+            self.opening_knowledge[position] = {
+                "move": data['move'],
+                "sequence": data.get('opening', 'Unknown'),
+                "weight": data.get('evaluation', 0.5)
+            }
+            # Position memory'ye de ekle
+            self.position_memory[position] = data['move']
+            self.learned_moves += 1
+        
+        print(f"Hafıza paketi yüklendi:")
+        print(f"- Toplam pozisyon: {len(self.opening_knowledge)}")
+        print(f"- Açılışlar: {set(data['sequence'] for data in self.opening_knowledge.values())}")
+        return True
+        
+    def get_move(self, position):
+        """Pozisyon için hamle seç"""
+        # Önce opening_knowledge'a bak
+        if position in self.opening_knowledge:
+            return self.opening_knowledge[position]["move"]
+        # Sonra position_memory'ye bak
+        return self.position_memory.get(position)
+        
     def get_learning_stats(self):
         return {
             **self.get_stats(),

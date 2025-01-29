@@ -1,3 +1,5 @@
+# src/memory_extractor.py
+
 import chess
 import chess.polyglot
 import json
@@ -45,13 +47,15 @@ class StockfishMemoryExtractor:
             self.board.reset()
             sequence_name = sequence["name"]
             print(f"\nİşleniyor: {sequence_name}")
-            current_sequence = []
-
+            
             for move_uci, weight in sequence["moves"]:
                 position_fen = self.board.fen()
-                move_key = f"{position_fen}_{sequence_name}"  # Benzersiz anahtar
-
-                memory_data[position_fen] = {
+                
+                # 🟢 YENİ: Benzersiz anahtar oluştur
+                memory_key = f"{position_fen}_{sequence_name}"
+                
+                # 🟢 YENİ: Yeni formatta veri sakla
+                memory_data[memory_key] = {
                     "move": move_uci,
                     "weight": weight,
                     "sequence": sequence_name,
@@ -62,7 +66,6 @@ class StockfishMemoryExtractor:
                 
                 try:
                     self.board.push_uci(move_uci)
-                    current_sequence.append(move_uci)
                 except Exception as e:
                     print(f"Hata: {move_uci} hamlesi yapılamadı - {e}")
                     break
@@ -109,20 +112,23 @@ class MemoryPackage:
         except Exception as e:
             print(f"Kayıt sırasında hata: {e}")
             raise
-            
+    
+    # 🟢 YENİ: Metadata güncelleme metodunu güncelle        
     def _update_metadata(self):
         """Metadata bilgilerini güncelle"""
-        self.metadata["total_positions"] = len(self.memory_data)
-    
+        # Toplam pozisyon sayısını güncelle
+        unique_positions = set(data["position"] for data in self.memory_data.values())
+        self.metadata["total_positions"] = len(unique_positions)
+        
         # Ağırlık ortalamasını hesapla
         weights = [m["weight"] for m in self.memory_data.values()]
         self.metadata["average_weight"] = sum(weights) / len(weights) if weights else 0
-    
+        
         # Sekans sayılarını güncelle
         self.metadata["sequences"] = {
             "Ruy Lopez": sum(1 for m in self.memory_data.values() if m["sequence"] == "Ruy Lopez"),
             "Italian Game": sum(1 for m in self.memory_data.values() if m["sequence"] == "Italian Game")
-    }
+        }
         
     def get_stats(self):
         """Detaylı istatistikler"""
@@ -160,11 +166,22 @@ def test_extraction():
     for name, count in stats['sequences'].items():
         print(f"- {name}: {count} pozisyon")
     
+    # 🟢 YENİ: Detaylı pozisyon gösterimi
     print("\n=== Kaydedilen Pozisyonlar ===")
-    for pos, data in memory_data.items():
-        print(f"\n{data['sequence']} - {data['move']}:")
-        print(f"FEN: {pos}")
-        print(f"Ağırlık: {data['weight']}")
+    sequences = {}
+    for key, data in memory_data.items():
+        seq = data["sequence"]
+        if seq not in sequences:
+            sequences[seq] = []
+        sequences[seq].append(data)
+    
+    for seq_name, moves in sequences.items():
+        print(f"\n{seq_name} Sekansı:")
+        for move_data in moves:
+            print(f"Hamle: {move_data['move']}")
+            print(f"Pozisyon: {move_data['position'][:50]}...")
+            print(f"Ağırlık: {move_data['weight']}")
+            print("---")
 
 if __name__ == "__main__":
     test_extraction()
