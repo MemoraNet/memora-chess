@@ -1,5 +1,3 @@
-# demo/demo_visualizer.py
-
 """
 Advanced visualization tools for MemoraNet Chess Demo.
 Handles all visual representations including charts, chess positions, and animations.
@@ -78,7 +76,7 @@ class DemoVisualizer:
         plt.close()
         
         return filename
-
+    
     def create_memory_visualization(self, memory_package):
         """Visualize memory package contents and statistics"""
         fig = plt.figure(figsize=(15, 8))
@@ -86,7 +84,7 @@ class DemoVisualizer:
         # 1. Opening Distribution
         ax1 = plt.subplot(121)
         openings = {}
-        for data in memory_package['memory_data'].values():
+        for data in memory_package['memories'].values():
             opening = data.get('opening', 'Unknown')
             openings[opening] = openings.get(opening, 0) + 1
         
@@ -96,7 +94,7 @@ class DemoVisualizer:
         
         # 2. Evaluation Distribution
         ax2 = plt.subplot(122)
-        evaluations = [data.get('evaluation', 0) for data in memory_package['memory_data'].values()]
+        evaluations = [data.get('evaluation', 0) for data in memory_package['memories'].values()]
         ax2.hist(evaluations, bins=20, color=VS['colors']['primary'], alpha=0.7)
         ax2.set_title('Position Evaluations')
         
@@ -133,6 +131,10 @@ class DemoVisualizer:
 
     def create_learning_progress_animation(self, positions_and_moves):
         """Create animation showing learning progress"""
+        if not positions_and_moves:
+            print("No positions to animate")
+            return None
+            
         frames = []
         temp_dir = os.path.join(self.animation_dir, 'temp')
         os.makedirs(temp_dir, exist_ok=True)
@@ -148,52 +150,49 @@ class DemoVisualizer:
                 with open(svg_path, 'w') as f:
                     f.write(svg)
                 
-                # Convert to PNG
-                os.system(f'magick {svg_path} {png_path}')
-                
-                # Read frame
-                frames.append(imageio.imread(png_path))
+                try:
+                    # Convert to PNG using ImageMagick
+                    os.system(f'magick {svg_path} {png_path}')
+                    
+                    # Read frame
+                    frame = imageio.imread(png_path)
+                    frames.append(frame)
+                except Exception as e:
+                    print(f"Frame creation error: {e}")
+                    continue
             
-            # Create GIF
-            output_path = os.path.join(self.animation_dir, 'learning_progress.gif')
-            imageio.mimsave(output_path, frames, duration=VS['animation']['frame_duration'])
+            if frames:
+                output_path = os.path.join(self.animation_dir, 'learning_progress.gif')
+                imageio.mimsave(output_path, frames, duration=VS['animation']['frame_duration'])
+                return 'learning_progress.gif'
             
+        except Exception as e:
+            print(f"Animation creation error: {e}")
         finally:
             # Cleanup temp files
-            for file in os.listdir(temp_dir):
-                os.remove(os.path.join(temp_dir, file))
-            os.rmdir(temp_dir)
+            if os.path.exists(temp_dir):
+                for file in os.listdir(temp_dir):
+                    try:
+                        os.remove(os.path.join(temp_dir, file))
+                    except:
+                        pass
+                try:
+                    os.rmdir(temp_dir)
+                except:
+                    pass
         
-        return 'learning_progress.gif'
-
-    def create_performance_comparison(self, student_moves, teacher_moves, positions):
-        """Create visual comparison of student vs teacher performance"""
-        matches = [s == t for s, t in zip(student_moves, teacher_moves)]
-        accuracy = sum(matches) / len(matches) * 100
-        
-        plt.figure(figsize=(10, 6))
-        plt.plot(range(1, len(matches) + 1), matches, 
-                marker='o', linestyle='-', color=VS['colors']['primary'],
-                linewidth=VS['chart_styles']['line_width'])
-        
-        plt.title(f'Move Accuracy Comparison\nOverall Accuracy: {accuracy:.1f}%')
-        plt.xlabel('Position Number')
-        plt.ylabel('Move Match')
-        plt.grid(True, alpha=VS['chart_styles']['grid_alpha'])
-        
-        filename = f'accuracy_comparison_{datetime.now().strftime("%Y%m%d_%H%M%S")}.png'
-        filepath = os.path.join(self.comparison_dir, filename)
-        plt.savefig(filepath, dpi=300, bbox_inches='tight')
-        plt.close()
-        
-        return filename
+        return None
 
     def show_real_time_position(self, position, move=None):
-        """Display chess position in real-time (for interactive mode)"""
+        """Display chess position in real-time with optional move arrow"""
         svg = self.create_chess_position_svg(position, move)
-        # Note: Real-time display implementation depends on the UI framework
-        # For now, we'll just save it
         filepath = os.path.join(self.output_dir, 'current_position.svg')
+        
         with open(filepath, 'w') as f:
             f.write(svg)
-        return filepath
+            
+        # Convert to PNG for display
+        png_path = os.path.join(self.output_dir, 'current_position.png')
+        os.system(f'magick {filepath} {png_path}')
+        
+        return png_path

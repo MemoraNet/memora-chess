@@ -1,187 +1,184 @@
-# src/memory_extractor.py
-
 import chess
-import chess.polyglot
+import chess.engine
 import json
 import time
 import os
-import struct
+from typing import Dict, List, Optional, Tuple
 
 class StockfishMemoryExtractor:
-    def __init__(self, opening_book_path="books/test_openings.bin"):
-        self.board = chess.Board()
-        self.book_path = opening_book_path
-        print(f"Açılış kitaplığı yolu: {opening_book_path}")
-        
-    def extract_openings(self, max_positions=1000):
-        """Açılış kitaplığından pozisyonları çek"""
-        print("Hafıza çıkarma işlemi başlıyor...")
-        memory_data = {}
-        
-        # Tüm sekansları bir listede toplayalım
-        all_sequences = [
-            {
-                "name": "Ruy Lopez",
-                "moves": [
-                    ("e2e4", 1000),
-                    ("e7e5", 1000),
-                    ("g1f3", 1000),
-                    ("b8c6", 1000),
-                    ("f1b5", 1000)
-                ]
-            },
-            {
-                "name": "Italian Game",
-                "moves": [
-                    ("e2e4", 900),
-                    ("e7e5", 900),
-                    ("g1f3", 900),
-                    ("b8c6", 900),
-                    ("f1c4", 900)
-                ]
-            }
-        ]
-        
-        # Her sekansı işle
-        for sequence in all_sequences:
-            self.board.reset()
-            sequence_name = sequence["name"]
-            print(f"\nİşleniyor: {sequence_name}")
-            
-            for move_uci, weight in sequence["moves"]:
-                position_fen = self.board.fen()
-                
-                # 🟢 YENİ: Benzersiz anahtar oluştur
-                memory_key = f"{position_fen}_{sequence_name}"
-                
-                # 🟢 YENİ: Yeni formatta veri sakla
-                memory_data[memory_key] = {
-                    "move": move_uci,
-                    "weight": weight,
-                    "sequence": sequence_name,
-                    "position": position_fen,
-                    "timestamp": time.time()
-                }
-                print(f"Pozisyon eklendi: {move_uci} ({sequence_name})")
-                
-                try:
-                    self.board.push_uci(move_uci)
-                except Exception as e:
-                    print(f"Hata: {move_uci} hamlesi yapılamadı - {e}")
-                    break
-        
-        print(f"\nToplam {len(memory_data)} pozisyon çıkarıldı")
-        return memory_data
-
-class MemoryPackage:
-    def __init__(self, source_name="Stockfish", memory_type="chess_openings"):
-        self.metadata = {
-            "source": source_name,
-            "type": memory_type,
-            "created_at": time.time(),
-            "ram_required": "50MB",
-            "version": "1.0",
-            "total_positions": 0,
-            "average_weight": 0.0,
-            "sequences": {
-                "Ruy Lopez": 0,
-                "Italian Game": 0
-            }
-        }
-        self.memory_data = {}
-        
-    def add_memories(self, memory_data):
-        """Hafıza paketine yeni veriler ekle"""
-        self.memory_data.update(memory_data)
-        self._update_metadata()
-        
-    def save(self, filename):
-        """Paketi .agentmem dosyası olarak kaydet"""
-        if not filename.endswith('.agentmem'):
-            filename += '.agentmem'
-            
-        package = {
-            "metadata": self.metadata,
-            "memory_data": self.memory_data
-        }
-        
+    def __init__(self, engine_path: str = "/opt/homebrew/bin/stockfish"):
+        """Initialize Stockfish memory extractor"""
         try:
-            with open(filename, "w") as f:
-                json.dump(package, f, indent=2)
-            print(f"Hafıza paketi kaydedildi: {filename}")
+            self.engine = chess.engine.SimpleEngine.popen_uci(engine_path)
+            self.board = chess.Board()
+            print("Stockfish engine initialized successfully!")
         except Exception as e:
-            print(f"Kayıt sırasında hata: {e}")
+            print(f"Failed to initialize Stockfish engine: {e}")
             raise
-    
-    # 🟢 YENİ: Metadata güncelleme metodunu güncelle        
-    def _update_metadata(self):
-        """Metadata bilgilerini güncelle"""
-        # Toplam pozisyon sayısını güncelle
-        unique_positions = set(data["position"] for data in self.memory_data.values())
-        self.metadata["total_positions"] = len(unique_positions)
-        
-        # Ağırlık ortalamasını hesapla
-        weights = [m["weight"] for m in self.memory_data.values()]
-        self.metadata["average_weight"] = sum(weights) / len(weights) if weights else 0
-        
-        # Sekans sayılarını güncelle
-        self.metadata["sequences"] = {
-            "Ruy Lopez": sum(1 for m in self.memory_data.values() if m["sequence"] == "Ruy Lopez"),
-            "Italian Game": sum(1 for m in self.memory_data.values() if m["sequence"] == "Italian Game")
-        }
-        
-    def get_stats(self):
-        """Detaylı istatistikler"""
-        return {
-            "total_positions": self.metadata["total_positions"],
-            "average_weight": self.metadata["average_weight"],
-            "sequences": self.metadata["sequences"],
-            "memory_size": len(json.dumps(self.memory_data)),
-            "creation_date": time.ctime(self.metadata["created_at"])
-        }
+
+    def extract_position_knowledge(self, position: str, depth: int = 20) -> Optional[Dict]:
+        """Extract Stockfish's knowledge about a specific position"""
+        try:
+            self.board.set_fen(position)
+            
+            # Analyze position with multiple variations
+            result = self.engine.analyse(
+                self.board,
+                chess.engine.Limit(depth=depth, time=0.5),
+                multipv=3  # Get top 3 moves
+            )
+            
+            if not result:
+                print(f"No analysis result for position: {position}")
+                return None
+                
+            main_line = result[0]
+            if not main_line.get("pv"):
+                print(f"No PV found for position: {position}")
+                return None
+                
+            best_move = main_line["pv"][0]
+            
+            return {
+                "position": position,
+                "best_move": best_move.uci(),
+                "evaluation": self._parse_evaluation(main_line),
+                "depth": main_line.get("depth", 0),
+                "principal_variation": [move.uci() for move in main_line["pv"][:5]],
+                "alternative_moves": [
+                    {
+                        "move": line["pv"][0].uci(),
+                        "evaluation": self._parse_evaluation(line)
+                    }
+                    for line in result[1:] if line.get("pv")
+                ],
+                "timestamp": time.time()
+            }
+            
+        except Exception as e:
+            print(f"Analysis error for position {position}: {e}")
+            return None
+
+    def _parse_evaluation(self, line: Dict) -> float:
+        """Parse Stockfish evaluation score"""
+        if "score" in line:
+            score = line["score"]
+            if score.is_mate():
+                return 10000 if score.mate() > 0 else -10000
+            else:
+                return score.relative.score() / 100.0
+        return 0.0
+
+    def create_memory_package(self, num_games: int = 5, 
+                            positions_per_game: int = 20,
+                            depth: int = 20) -> Optional[Dict]:
+        """Create a complete memory package from multiple games"""
+        try:
+            memory_package = {
+                "metadata": {
+                    "source": "Stockfish",
+                    "creation_date": time.strftime("%Y-%m-%d %H:%M:%S"),
+                    "engine_depth": depth,
+                    "total_positions": 0,
+                    "total_games": num_games
+                },
+                "memories": {}
+            }
+            
+            for game_id in range(num_games):
+                print(f"\nExtracting game {game_id + 1}/{num_games}...")
+                self.board.reset()
+                
+                for move_number in range(positions_per_game):
+                    position = self.board.fen()
+                    
+                    # Extract knowledge for current position
+                    memory = self.extract_position_knowledge(position, depth)
+                    if memory:
+                        key = f"game_{game_id}_pos_{move_number}"
+                        memory_package["memories"][key] = memory
+                        
+                        # Make the best move
+                        try:
+                            best_move = chess.Move.from_uci(memory["best_move"])
+                            if best_move in self.board.legal_moves:
+                                self.board.push(best_move)
+                            else:
+                                print(f"Invalid move generated: {best_move}")
+                                break
+                        except Exception as e:
+                            print(f"Error making move: {e}")
+                            break
+                            
+                        if self.board.is_game_over():
+                            break
+                    else:
+                        print(f"Failed to analyze position: {position}")
+                        break
+                
+            memory_package["metadata"]["total_positions"] = len(memory_package["memories"])
+            return memory_package
+            
+        except Exception as e:
+            print(f"Error creating memory package: {e}")
+            return None
+
+    def save_memory_package(self, package: Dict, filename: str):
+        """Save memory package to file"""
+        if not filename.endswith('.stockfish'):
+            filename += '.stockfish'
+            
+        with open(filename, 'w') as f:
+            json.dump(package, f, indent=2)
+
+    def load_memory_package(self, filename: str) -> Dict:
+        """Load memory package from file"""
+        with open(filename, 'r') as f:
+            return json.load(f)
+
+    def __del__(self):
+        """Cleanup engine properly"""
+        try:
+            if hasattr(self, 'engine') and self.engine:
+                try:
+                    self.engine.quit()
+                except chess.engine.EngineTerminatedError:
+                    pass  # Ignore if already terminated
+                except Exception as e:
+                    print(f"Warning: Engine cleanup error: {e}")
+                finally:
+                    self.engine = None
+        except Exception as e:
+            print(f"Cleanup error: {e}")
 
 def test_extraction():
-    """Hafıza çıkarma işlemini test et"""
-    print("\n=== Hafıza Çıkarma Testi ===")
-    
-    # Extractor oluştur
+    """Test memory extraction functionality"""
     extractor = StockfishMemoryExtractor()
     
-    # Verileri çek
-    memory_data = extractor.extract_openings()
+    # Create test package
+    package = extractor.create_memory_package(
+        num_games=2,
+        positions_per_game=10,
+        depth=15
+    )
     
-    # Memory package oluştur
-    package = MemoryPackage(source_name="TestBook", memory_type="basic_openings")
-    package.add_memories(memory_data)
-    
-    # Paketi kaydet
-    package.save("test_memory_package")
-    
-    # Detaylı istatistikleri göster
-    print("\n=== Hafıza Paketi İstatistikleri ===")
-    stats = package.get_stats()
-    print(f"Toplam Pozisyon: {stats['total_positions']}")
-    print(f"Ortalama Ağırlık: {stats['average_weight']:.2f}")
-    print("\nSekans Dağılımı:")
-    for name, count in stats['sequences'].items():
-        print(f"- {name}: {count} pozisyon")
-    
-    # 🟢 YENİ: Detaylı pozisyon gösterimi
-    print("\n=== Kaydedilen Pozisyonlar ===")
-    sequences = {}
-    for key, data in memory_data.items():
-        seq = data["sequence"]
-        if seq not in sequences:
-            sequences[seq] = []
-        sequences[seq].append(data)
-    
-    for seq_name, moves in sequences.items():
-        print(f"\n{seq_name} Sekansı:")
-        for move_data in moves:
-            print(f"Hamle: {move_data['move']}")
-            print(f"Pozisyon: {move_data['position'][:50]}...")
-            print(f"Ağırlık: {move_data['weight']}")
-            print("---")
+    if package:
+        # Save package
+        extractor.save_memory_package(package, "test_stockfish_memory")
+        
+        # Print statistics
+        print("\nMemory Package Statistics:")
+        print(f"Total positions: {package['metadata']['total_positions']}")
+        print(f"Engine depth: {package['metadata']['engine_depth']}")
+        
+        # Show sample position
+        sample_key = list(package['memories'].keys())[0]
+        sample_memory = package['memories'][sample_key]
+        print("\nSample Position Analysis:")
+        print(f"Position: {sample_memory['position']}")
+        print(f"Best move: {sample_memory['best_move']}")
+        print(f"Evaluation: {sample_memory['evaluation']}")
+        print(f"Principal variation: {sample_memory['principal_variation']}")
 
 if __name__ == "__main__":
     test_extraction()
